@@ -12,13 +12,21 @@ import { UsersQueryRepository } from './features/users/infrastructure/users.quer
 import { User, UserSchema } from './features/users/domain/user.entity';
 import { UsersController } from './features/users/api/users.controller';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
+import { BcryptAdapter } from './base/adapters/bcrypt.adapter';
+import { DateCreate } from './base/adapters/get-current-date';
+import { TestingController } from './features/testing/api/testing.controller';
+import { TestingService } from './features/testing/aplication/testing.service';
+import { TestingRepository } from './features/testing/infrastructure/testing.repository';
 
 const usersProviders: Provider[] = [
   UsersRepository,
   UsersService,
   UsersQueryRepository,
 ];
-
+const testingProvider: Provider[] = [TestingService, TestingRepository];
+const commonsProvider: Provider[] = [BcryptAdapter, DateCreate];
+const URI = appSettings.api.MONGO_CONNECTION_URI;
+console.log(URI, 'URI**');
 @Module({
   // Регистрация модулей
   imports: [
@@ -26,9 +34,9 @@ const usersProviders: Provider[] = [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   // Регистрация провайдеров
-  providers: [...usersProviders,],
+  providers: [...usersProviders, ...commonsProvider, ...testingProvider],
   // Регистрация контроллеров
-  controllers: [UsersController],
+  controllers: [UsersController, TestingController],
 })
 export class AppModule implements NestModule {
   // https://docs.nestjs.com/middleware#applying-middleware

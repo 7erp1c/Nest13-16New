@@ -47,13 +47,15 @@ class APISettings {
 
   // Database
   public readonly MONGO_CONNECTION_URI: string;
+  public readonly MONGO_DB_NAME: string;
 
   constructor(private readonly envVariables: EnvironmentVariable) {
     // Application
-    this.APP_PORT = this.getNumberOrDefault(envVariables.APP_PORT, 7840);
+    this.APP_PORT = this.getNumberOrDefault(envVariables.APP_PORT, 5000);
 
     // Database
-    this.MONGO_CONNECTION_URI = envVariables.MONGO_CONNECTION_URI ?? 'mongodb://localhost/nest';
+    this.MONGO_CONNECTION_URI =
+      envVariables.MONGO_CONNECTION_URI ?? 'mongodb://localhost/DataBase';
   }
 
   private getNumberOrDefault(value: string, defaultValue: number): number {

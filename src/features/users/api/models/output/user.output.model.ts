@@ -1,20 +1,20 @@
-import {UserDocument} from "../../../domain/user.entity";
-
+import { UserDocument } from '../../../domain/user.entity';
+import { ObjectId } from 'mongoose';
+import { UserOutputDto } from './output';
 
 export class UserOutputModel {
-    id: string;
-    name: string
-    email: string
+  id: string;
+  login: string;
+  email: string;
 }
-
 // MAPPERS
+export const UserOutputModelMapper = (user: UserDocument): UserOutputDto => {
+  const outputModel = new UserOutputDto();
 
-export const UserOutputModelMapper = (user: UserDocument): UserOutputModel => {
-    const outputModel = new UserOutputModel();
+  outputModel.id = user.id;
+  outputModel.login = user.login;
+  outputModel.email = user.email;
+  outputModel.createdAt = user.createdAt;
 
-    outputModel.id = user.id;
-    outputModel.name = user.name;
-    outputModel.email = user.email;
-
-    return outputModel;
+  return outputModel;
 };

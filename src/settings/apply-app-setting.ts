@@ -71,11 +71,12 @@ const setAppPipes = (app: INestApplication) => {
         const customErrors = [];
 
         errors.forEach((e) => {
-          const constraintKeys = Object.keys(e.constraints);
+          const constraintKeys = Object.keys(e.constraints!);
 
           constraintKeys.forEach((cKey) => {
+            //@ts-ignore
             const msg = e.constraints[cKey];
-
+            //@ts-ignore
             customErrors.push({ field: e.property, message: msg });
           });
         });

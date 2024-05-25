@@ -23,15 +23,17 @@ export class UsersRepository {
   }
 
   async deleteUser(id: string) {
-    const result = await this.userModel
-      .findOneAndDelete({
-        _id: id,
-      })
-      .exec();
-    if (!result) {
+    try {
+      const result = await this.userModel
+        .findOneAndDelete({
+          _id: new ObjectId(id),
+        })
+        .exec();
+      if (!result) throw new NotFoundException('User not found');
+      return result;
+    } catch (error) {
       throw new NotFoundException('User not found');
     }
-    return result;
   }
 
   async getUserById(id: string) {

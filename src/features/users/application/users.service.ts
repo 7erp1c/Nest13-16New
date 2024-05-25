@@ -11,7 +11,7 @@ export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly cryptAdapter: BcryptAdapter,
-    private readonly dateCreate: DateCreate,
+    protected dateCreate: DateCreate,
   ) {}
 
   async createUser(

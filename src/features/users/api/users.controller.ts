@@ -4,21 +4,22 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode, HttpStatus,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
   Query,
   Req,
   Res,
-  UseGuards
-} from "@nestjs/common";
+  UseGuards,
+} from '@nestjs/common';
 import { UsersQueryRepository } from '../infrastructure/users.query-repository';
 import { UsersService } from '../application/users.service';
-import { UserOutputDto } from "./models/output/output";
-import { UserCreateInputModel } from "./models/input/create.user.input.model";
-import { createQuery } from "../../../base/adapters/query/create.query";
-import { QueryUsersRequestType } from "./models/input/input";
+import { UserOutputDto } from './models/output/output';
+import { UserCreateInputModel } from './models/input/create.user.input.model';
+import { createQuery } from '../../../base/adapters/query/create.query';
+import { QueryUsersRequestType } from './models/input/input';
 
 // Tag для swagger
 @ApiTags('Users')
@@ -31,6 +32,7 @@ export class UsersController {
     protected usersQueryRepository: UsersQueryRepository,
   ) {}
   @Get()
+  @HttpCode(HttpStatus.OK)
   async getAll(@Query() query: QueryUsersRequestType) {
     const { sortData, searchData } = createQuery(query);
     return await this.usersQueryRepository.getAllUsers(sortData, searchData);
@@ -50,19 +52,9 @@ export class UsersController {
     await this.usersService.deleteUser(id);
   }
 
-
-
   @Get()
-  async hello(
-    // // Для работы с query применяя наш кастомный pipe
-    // @Query('id', NumberPipe) id: number,
-    // // Для работы с request (импорт Request из express)
-    // @Req() req: Request,
-    // // Для работы с response (импорт Response из express)
-    // // При работе с данным декоратором необходимо установить passthrough: true
-    // // чтобы работал механизм возврата ответа с помощью return data; или res.json(data)
-    // @Res({ passthrough: true }) res: Response,
-  ) {
+  async hello() {
+    // @Res({ passthrough: true }) res: Response, // // чтобы работал механизм возврата ответа с помощью return data; или res.json(data) // // При работе с данным декоратором необходимо установить passthrough: true // // Для работы с response (импорт Response из express) // @Req() req: Request, // // Для работы с request (импорт Request из express) // @Query('id', NumberPipe) id: number, // // Для работы с query применяя наш кастомный pipe
     return 'Hello';
   }
 

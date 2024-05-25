@@ -14,14 +14,14 @@ export const SORT = {
   desc: -1,
 };
 // export abstract class BaseQueryRepository<M> {
-//     protected constructor(private model: Model<M>) {
+//     protected constructor(private models: Model<M>) {
 //     }
 //
 //     async find(filter: FilterQuery<M>,
 //                projection?: ProjectionType<M> | null | undefined,
 //                options?: QueryOptions<M> | null | undefined,
 //                pagination: {skip: number, limit: number }) {
-//         return this.model.find<M>(filter, projection, options)
+//         return this.models.find<M>(filter, projection, options)
 //     }
 // }
 

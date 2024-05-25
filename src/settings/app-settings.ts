@@ -51,7 +51,7 @@ class APISettings {
 
   constructor(private readonly envVariables: EnvironmentVariable) {
     // Application
-    this.APP_PORT = this.getNumberOrDefault(envVariables.APP_PORT, 5000);
+    this.APP_PORT = this.getNumberOrDefault(envVariables.APP_PORT!, 5000);
 
     // Database
     this.MONGO_CONNECTION_URI =
@@ -70,8 +70,10 @@ class APISettings {
 }
 
 const env = new EnvironmentSettings(
+  //@ts-ignore
   (Environments.includes(process.env.ENV?.trim())
-    ? process.env.ENV.trim()
+    ? //@ts-ignore
+      process.env.ENV.trim()
     : 'DEVELOPMENT') as EnvironmentsTypes,
 );
 

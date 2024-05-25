@@ -25,9 +25,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
       if (Array.isArray(responseBody.message)) {
         responseBody.message.forEach((e) =>
+          //@ts-ignore
           errorsResponse.errorsMessages.push(e),
         );
       } else {
+        //@ts-ignore
         errorsResponse.errorsMessages.push(responseBody.message);
       }
 

@@ -7,42 +7,57 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PostOutputDto } from '../api/models/output/output.types';
 import { postMapper } from '../api/models/output/post.output.models';
 import { PostsLikesQueryRepository } from '../../likes/infrastructure/posts.likes.query.repository';
+import { ObjectId, WithId } from 'mongodb';
+import { SortPostRepositoryType } from '../../users/api/models/input/input';
 
 @Injectable()
 export class PostsQueryRepository {
   constructor(
-    @InjectModel(Post.name) private postModel: Model<postsDocument>,
+    @InjectModel(Post.name) private postModel: Model<Post>,
     protected blogsQueryRepository: BlogsQueryRepository,
     protected postsLikesQueryRepository: PostsLikesQueryRepository,
   ) {}
 
   async getAllPosts(
-    sortData: QuerySortType,
-    blogId?: string | null,
-    userId?: string | null,
+    sortData: SortPostRepositoryType,
+    blogId?: string,
+    userId?: string,
   ) {
     let searchKey = {};
+    let sortKey = {};
+    let sortDirection: number;
+    //как искать
+    if (blogId) searchKey = { blogId: blogId };
 
-    if (blogId) {
-      searchKey = { blogId: blogId };
-      await this.blogsQueryRepository.findBlogById(blogId);
-    }
-
-    // calculate limits for DB request
+    // есть ли у searchNameTerm параметр создания ключа поиска
     const documentsTotalCount = await this.postModel.countDocuments(searchKey); // Receive total count of blogs
     const pageCount = Math.ceil(documentsTotalCount / +sortData.pageSize); // Calculate total pages count according to page size
     const skippedDocuments = (+sortData.pageNumber - 1) * +sortData.pageSize;
 
-    // Get documents from DB
+    //  имеет ли SortDirection значение "desc", присвойте SortDirection значение -1, в противном случае присвойте 1
+    if (sortData.sortDirection === 'desc') sortDirection = -1;
+    else sortDirection = 1;
+
+    // существуют ли поля, если нет, добавить createdAt
+    if (sortData.sortBy === 'title') sortKey = { title: sortDirection };
+    else if (sortData.sortBy === 'shortDescription')
+      sortKey = { shortDescription: sortDirection };
+    else if (sortData.sortBy === 'content')
+      sortKey = { content: sortDirection };
+    else if (sortData.sortBy === 'blogId') sortKey = { blogId: sortDirection };
+    else if (sortData.sortBy === 'blogName')
+      sortKey = { blogName: sortDirection };
+    else sortKey = { createdAt: sortDirection };
+
+    // Получать документы из DB
     const posts = await this.postModel
       .find(searchKey)
-      .sort({ [sortData.sortBy]: sortData.sortDirection })
+      .sort(sortKey)
       .skip(+skippedDocuments)
       .limit(+sortData.pageSize)
       .lean();
 
     const mappedPosts: PostOutputDto[] = [];
-    console.log(mappedPosts);
 
     for (let i = 0; i < posts.length; i++) {
       const likes = await this.postsLikesQueryRepository.getLikes(

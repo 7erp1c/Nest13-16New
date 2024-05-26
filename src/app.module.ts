@@ -32,6 +32,7 @@ import { PostsLikesQueryRepository } from './features/likes/infrastructure/posts
 import { PostsRepository } from './features/posts/infrastructure/posts.repository';
 import { PostsService } from './features/posts/aplication/posts.service';
 import { PostsQueryRepository } from './features/posts/infrastructure/posts.query-repository';
+import { CommentSchema } from './features/comments/domain/comments.entity';
 
 const blogsProviders: Provider[] = [
   BlogsRepository,
@@ -61,6 +62,7 @@ console.log(URI, 'URI**');
       { name: User.name, schema: UserSchema },
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostsSchema },
+      // { name: Comment.name, schema: CommentSchema },
       { name: PostsLikes.name, schema: PostsLikesSchema },
     ]),
   ],

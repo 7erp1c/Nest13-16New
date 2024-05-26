@@ -17,37 +17,38 @@ import { BlogTypeOutput } from '../api/models/output/output';
 export class BlogsQueryRepository {
   constructor(@InjectModel(Blog.name) private blogModel: Model<Blog>) {}
   async getAllBlogs(sortData: QuerySortType, searchData: QuerySearchType) {
-    let sortKey = {};
+    //Определяются ключи для поиска и сортировки в зависимости от переданных данных.
     let searchKey = {};
+    let sortKey = {};
+    let sortDirection: number;
 
-    // check have search terms create search keys array
-    const searchKeysArray: any[] = [];
+    // есть ли у searchNameTerm параметр создания ключа поиска
     if (searchData.searchNameTerm)
-      searchKeysArray.push({
+      searchKey = {
         name: { $regex: searchData.searchNameTerm, $options: 'i' },
-      });
+      };
 
-    if (searchKeysArray.length === 0) {
-      searchKey = {};
-    } else if (searchKeysArray.length === 1) {
-      searchKey = searchKeysArray[0];
-    } else if (searchKeysArray.length > 1) {
-      searchKey = { $or: searchKeysArray };
-    }
-    // calculate limits for DB request
-    const documentsTotalCount = await this.blogModel.countDocuments(searchKey); // Receive total count of blogs
-    const pageCount = Math.ceil(documentsTotalCount / +sortData.pageSize); // Calculate total pages count according to page size
-    const skippedDocuments = (+sortData.pageNumber - 1) * +sortData.pageSize; // Calculate count of skipped docs before requested page
+    // рассчитать лимиты для запроса к DB
+    const documentsTotalCount = await this.blogModel.countDocuments(searchKey); // Получите общее количество блогов
+    const pageCount = Math.ceil(documentsTotalCount / +sortData.pageSize); // Рассчитайте общее количество страниц в соответствии с размером страницы
+    const skippedDocuments = (+sortData.pageNumber - 1) * +sortData.pageSize; // Подсчитать количество пропущенных документов перед запрошенной страницей
 
-    // check have fields exists assign the same one else assign "createdAt" value
-    if (sortData.sortBy === 'name')
-      sortKey = { login: SORT[sortData.sortDirection] };
-    else if (sortData.sortBy === 'email')
-      sortKey = { email: SORT[sortData.sortDirection] };
-    else sortKey = { createdAt: SORT[sortData.sortDirection] };
+    // имеет ли SortDirection значение "desc", присвойте SortDirection значение -1, в противном случае присвойте 1
+    if (sortData.sortDirection === 'desc') sortDirection = -1;
+    else sortDirection = 1;
 
-    // Get documents from DB
-    const blogs: WithId<BlogTypeCreate>[] = await this.blogModel
+    // существуют ли поля
+    if (sortData.sortBy === 'description')
+      sortKey = { description: sortDirection };
+    else if (sortData.sortBy === 'websiteUrl')
+      sortKey = { websiteUrl: sortDirection };
+    else if (sortData.sortBy === 'name') sortKey = { name: sortDirection };
+    else if (sortData.sortBy === 'isMembership')
+      sortKey = { isMembership: sortDirection };
+    else sortKey = { createdAt: sortDirection };
+
+    // Получать документы из DB
+    const blogs = await this.blogModel
       .find(searchKey)
       .sort(sortKey)
       .skip(+skippedDocuments)

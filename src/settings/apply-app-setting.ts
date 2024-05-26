@@ -9,7 +9,7 @@ import { appSettings } from './app-settings';
 import { LoggerMiddlewareFunc } from '../common/middlewares/logger.middleware';
 
 // Префикс нашего приложения (http://site.com/api)
-const APP_PREFIX = '/api';
+const APP_PREFIX = '/';
 
 // Используем данную функцию в main.ts и в e2e тестах
 export const applyAppSettings = (app: INestApplication) => {
@@ -44,7 +44,7 @@ const setAppPrefix = (app: INestApplication) => {
 
 const setSwagger = (app: INestApplication) => {
   if (!appSettings.env.isProduction()) {
-    const swaggerPath = APP_PREFIX + '/swagger-doc';
+    const swaggerPath = APP_PREFIX + 'swagger-doc';
 
     const config = new DocumentBuilder()
       .setTitle('BLOGGER API')

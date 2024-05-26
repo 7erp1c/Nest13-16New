@@ -61,13 +61,20 @@ export class BlogsController {
   @Get(':blogId/posts')
   @HttpCode(HttpStatus.OK)
   async getAllPostsForBlog(
-    @Param('id') id: string,
+    @Param('blogId') blogId: string,
     @Query() query: QueryUsersRequestType,
-    @Req() req: Request,
   ) {
     const { sortData, searchData } = createQuery(query);
     try {
-      return await this.postsQueryRepository.getAllPosts(sortData, id, null);
+      const findBlogById = await this.blogsService.findBlogById(blogId);
+      if (!findBlogById) {
+        throw new BadRequestException('Sorry bro, blog not found');
+      }
+      console.log(blogId);
+      return await this.postsQueryRepository.getAllPosts(
+        sortData,
+        findBlogById._id.toString(),
+      );
     } catch {
       throw new NotFoundException();
     }

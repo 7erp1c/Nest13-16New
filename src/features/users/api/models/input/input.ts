@@ -6,3 +6,9 @@ export type QueryUsersRequestType = {
   pageNumber?: number;
   pageSize?: number;
 };
+export type SortPostRepositoryType = {
+  sortBy: string;
+  sortDirection: 'asc' | 'desc';
+  pageNumber: number;
+  pageSize: number;
+};

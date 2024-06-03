@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { User, UserDocument } from '../domain/user.entity';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -9,6 +9,8 @@ import {
 import { UserType } from '../api/models/output/output';
 import { WithId } from 'mongodb';
 import { UserOutputModelMapper } from '../api/models/output/user.output.model';
+import { getAuthTypeEndpointMe } from '../../auth/api/model/output/output';
+import { getAuthUsersView } from '../../auth/api/model/output/auth.output.model';
 export const SORT = {
   asc: 1,
   desc: -1,
@@ -83,4 +85,13 @@ export class UsersQueryRepository {
   //     const user = await this.userModel.findById(userId, {__v: false})
   //     return UserOutputModelMapper(user);
   // }
+  async getUserAuthMe(id: string): Promise<getAuthTypeEndpointMe> {
+    const user = await this.userModel.findById({ _id: id }).lean();
+    if (!user) throw new UnauthorizedException('User not found');
+    return {
+      login: user.login,
+      email: user.email,
+      userId: user._id.toString(),
+    };
+  }
 }

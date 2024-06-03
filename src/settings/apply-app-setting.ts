@@ -4,15 +4,28 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { HttpExceptionFilter } from '../common/exception-filters/http-exception-filter';
+import {
+  ErrorExceptionFilter,
+  HttpExceptionFilter,
+} from '../common/exception-filters/http-exception-filter';
 import { appSettings } from './app-settings';
 import { LoggerMiddlewareFunc } from '../common/middlewares/logger.middleware';
-
+import { useContainer } from 'class-validator';
+import { AppModule } from '../app.module';
+interface CustomError {
+  field: string;
+  message: string;
+}
 // Префикс нашего приложения (http://site.com/api)
 const APP_PREFIX = '/';
 
 // Используем данную функцию в main.ts и в e2e тестах
 export const applyAppSettings = (app: INestApplication) => {
+  // Для внедрения зависимостей в validator constraint
+  // {fallbackOnErrors: true} требуется, поскольку Nest генерирует исключение,
+  // когда DI не имеет необходимого класса.
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
+
   // Применение глобальных Interceptors
   // app.useGlobalInterceptors()
 
@@ -61,26 +74,26 @@ const setSwagger = (app: INestApplication) => {
 
 const setAppPipes = (app: INestApplication) => {
   app.useGlobalPipes(
+    //для правильного отображения ошибок, настраиваем useGlobalPipes
     new ValidationPipe({
       // Для работы трансформации входящих данных
       transform: true,
       // Выдавать первую ошибку для каждого поля
       stopAtFirstError: true,
-      // Перехватываем ошибку, кастомизируем её и выкидываем 400 с собранными данными
+      // Фабрика, перехватываем ошибку, кастомизируем её и выкидываем 400 с собранными данными
       exceptionFactory: (errors) => {
-        const customErrors = [];
-
+        console.log('*** *', errors);
+        const customErrors: CustomError[] = [];
         errors.forEach((e) => {
-          const constraintKeys = Object.keys(e.constraints!);
-
+          //Происходит перебор каждой ошибки e в исходном массиве,
+          //достаём данные из errors.constraints и преобразуем в массив
+          const constraintKeys = Object.keys(e.constraints!); //Для каждой ошибки извлекается объект constraints, и его ключи преобразуются в массив строк constraintKeys.
           constraintKeys.forEach((cKey) => {
-            //@ts-ignore
-            const msg = e.constraints[cKey];
-            //@ts-ignore
-            customErrors.push({ field: e.property, message: msg });
+            // Каждый ключ cKey из массива constraintKeys перебирается внутри вложенного цикла.
+            const msg = e.constraints![cKey]; //Сохраняется сообщение об ошибке для конкретного ключа cKey из constraints.
+            customErrors.push({ field: e.property, message: msg }); // Для каждого ключа cKey создается новый объект с полями field (свойство property из исходной ошибки) и message (сообщение об ошибке из constraints), который затем добавляется в массив customErrors.
           });
         });
-
         // Error 400
         throw new BadRequestException(customErrors);
       },
@@ -89,5 +102,5 @@ const setAppPipes = (app: INestApplication) => {
 };
 
 const setAppExceptionsFilters = (app: INestApplication) => {
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new ErrorExceptionFilter(), new HttpExceptionFilter());
 };

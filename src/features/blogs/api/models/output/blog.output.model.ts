@@ -1,6 +1,3 @@
-import { UserDocument } from '../../../../users/domain/user.entity';
-import { UserOutputDto } from '../../../../users/api/models/output/output';
-import { BlogDocument } from '../../../domain/blogs.entity';
 import { BlogTypeOutput } from './output';
 import { WithId } from 'mongodb';
 import { BlogTypeCreate } from '../input/input';

@@ -81,7 +81,9 @@ export class PostsController {
       inputModel.blogId,
     );
     if (!findBlogById) {
-      throw new BadRequestException('Sorry bro, blog not found');
+      throw new NotFoundException([
+        { message: 'Sorry bro, blog not found', field: 'blogId' },
+      ]);
     }
     const newPosts = await this.postsService.createPost(
       inputModel,

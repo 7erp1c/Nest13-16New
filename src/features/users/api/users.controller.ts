@@ -20,8 +20,10 @@ import { UserOutputDto } from './models/output/output';
 import { UserCreateInputModel } from './models/input/create.user.input.model';
 import { createQuery } from '../../../base/adapters/query/create.query';
 import { QueryUsersRequestType } from './models/input/input';
+import { AdminAuthGuard } from '../../../common/guards/auth.admin.guard';
 
 // Tag для swagger
+
 @ApiTags('Users')
 @Controller('users')
 // Установка guard на весь контроллер
@@ -32,6 +34,7 @@ export class UsersController {
     protected usersQueryRepository: UsersQueryRepository,
   ) {}
   @Get()
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.OK)
   async getAll(@Query() query: QueryUsersRequestType) {
     const { sortData, searchData } = createQuery(query);
@@ -39,6 +42,7 @@ export class UsersController {
   }
 
   @Post()
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createUser(
     @Body() createModel: UserCreateInputModel,
@@ -47,6 +51,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') id: string) {
     await this.usersService.deleteUser(id);

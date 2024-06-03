@@ -6,33 +6,69 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import * as process from 'process'; //импорт из express, работаем на низах
+
+@Catch(Error)
+// ErrorExceptionFilter должен имплементить ExceptionFilter(идёт как интерфейс,
+// у которого есть метод catch) =>
+export class ErrorExceptionFilter implements ExceptionFilter {
+  //host наш сервак
+  catch(exception: HttpException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp(); //говорим серваку переключится в http (host.switchToHttp()), он возвращает контекст
+    const response = ctx.getResponse<Response>(); //у контекста мы берем res
+    //const request = ctx.getRequest<Request>(); //у контекста мы берем req
+    if (process.env.ENV !== 'PRODUCTION') {
+      response
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ errorMessage: exception.toString(), stack: exception.stack });
+    } else {
+      response
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json('INTERNAL SERVER ERROR');
+    }
+  }
+}
 
 // https://docs.nestjs.com/exception-filters
+// декоратор @Catch определяет какие ошибки мы перехватываем
 @Catch(HttpException)
+// HttpExceptionFilter должен имплементить ExceptionFilter(идёт как интерфейс,
+// у которого есть метод catch) =>
 export class HttpExceptionFilter implements ExceptionFilter {
+  //host наш сервак
   catch(exception: HttpException, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
-    const status = exception.getStatus();
+    const ctx = host.switchToHttp(); //говорим серваку переключится в http (host.switchToHttp()), он возвращает контекст
+    const response = ctx.getResponse<Response>(); //у контекста мы берем res
+    const request = ctx.getRequest<Request>(); //у контекста мы берем req
+    const status = exception.getStatus(); //к нам приходит exception error, получаем status
+    console;
 
-    if (status === HttpStatus.BAD_REQUEST) {
-      const errorsResponse = {
-        errorsMessages: [],
-      };
-
+    ////если в status есть 401
+    if (status === HttpStatus.UNAUTHORIZED) {
+      const errorsMessages: string[] = [];
       const responseBody: any = exception.getResponse();
-
-      if (Array.isArray(responseBody.message)) {
-        responseBody.message.forEach((e) =>
-          //@ts-ignore
+      errorsMessages.push(responseBody, `statusCode: ${status}`);
+      response.status(status).json({ errorsMessages });
+      return;
+    }
+    //если в status есть 400
+    if (status === HttpStatus.BAD_REQUEST || status === HttpStatus.NOT_FOUND) {
+      const errorsResponse: { errorsMessages: string[] } = {
+        //создаём объек errorsResponse с массивом errorsMessages
+        errorsMessages: [], //
+      };
+      //получим объкт в responseBody, чтобы пробежаться по ошибкам
+      const responseBody: any = exception.getResponse();
+      console.log('* *', responseBody);
+      //если массив пробегаемся forEach и пушим в errorsResponse.errorsMessages
+      if (Array.isArray(responseBody.message as string[])) {
+        responseBody.message.forEach((e: string) =>
           errorsResponse.errorsMessages.push(e),
         );
       } else {
-        //@ts-ignore
         errorsResponse.errorsMessages.push(responseBody.message);
       }
-
+      //возращаем статус и массив ошибок
       response.status(status).json(errorsResponse);
     } else {
       response.status(status).json({

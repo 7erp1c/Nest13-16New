@@ -1,6 +1,11 @@
 import { config } from 'dotenv';
+import * as process from 'process';
 
 config();
+export const AUTH_METHODS = {
+  base: 'Basic',
+  bearer: 'Bearer',
+};
 
 export type EnvironmentVariable = { [key: string]: string | undefined };
 export type EnvironmentsTypes =
@@ -42,20 +47,38 @@ class AppSettings {
 }
 
 class APISettings {
+  //Error req
+  public readonly UserError = 'User not found';
+  //Token
+  public readonly JWT_SECRET: string;
+  REFRESH_TOKEN_EXPIRATION_TIME = '18s';
+  ACCESS_TOKEN_EXPIRATION_TIME = '8s';
+  EMAIL_CONFIRMATION_EXPIRATION_TIME = '30h';
+  RECOVERY_TOKEN_EXPIRATION_TIME = '30d';
   // Application
   public readonly APP_PORT: number;
-
+  //Email
+  public readonly GMAIL_COM_PASS: string;
   // Database
   public readonly MONGO_CONNECTION_URI: string;
-  public readonly MONGO_DB_NAME: string;
+  public readonly MONGO_CONNECTION_URI_FOR_TESTS: string;
 
   constructor(private readonly envVariables: EnvironmentVariable) {
     // Application
-    this.APP_PORT = this.getNumberOrDefault(envVariables.APP_PORT!, 5000);
-
+    this.APP_PORT = this.getNumberOrDefault(
+      envVariables.APP_PORT as string,
+      5000,
+    );
+    //JWT
+    this.JWT_SECRET = envVariables.JWT_SECRET ?? '123';
+    console.log('*Jwt*', this.JWT_SECRET);
+    //Email
+    this.GMAIL_COM_PASS = envVariables.GMAIL_COM_PASS!;
     // Database
     this.MONGO_CONNECTION_URI =
-      envVariables.MONGO_CONNECTION_URI ?? 'mongodb://localhost/DataBase';
+      envVariables.MONGO_CONNECTION_URI ?? 'mongodb://localhost/nest';
+    this.MONGO_CONNECTION_URI_FOR_TESTS =
+      envVariables.MONGO_CONNECTION_URI_FOR_TESTS ?? 'mongodb://localhost/test';
   }
 
   private getNumberOrDefault(value: string, defaultValue: number): number {
@@ -70,12 +93,11 @@ class APISettings {
 }
 
 const env = new EnvironmentSettings(
-  //@ts-ignore
-  (Environments.includes(process.env.ENV?.trim())
-    ? //@ts-ignore
-      process.env.ENV.trim()
+  (Environments.includes((process.env.ENV as string)?.trim())
+    ? (process.env.ENV as string).trim()
     : 'DEVELOPMENT') as EnvironmentsTypes,
 );
 
 const api = new APISettings(process.env);
 export const appSettings = new AppSettings(env, api);
+console.log('*Jwt*****', appSettings.api.JWT_SECRET);

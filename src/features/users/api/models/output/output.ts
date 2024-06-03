@@ -1,10 +1,16 @@
 import { Schema } from '@nestjs/mongoose';
+import { ObjectId } from 'mongoose';
 
 export class UserOutputDto {
   id: string;
   login: string;
   email: string;
   createdAt: string;
+}
+export class UserOutput {
+  _id: ObjectId;
+  login: string;
+  email: string;
 }
 export class CreateUserDto {
   login: string;

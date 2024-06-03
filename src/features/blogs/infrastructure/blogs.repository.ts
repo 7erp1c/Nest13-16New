@@ -29,9 +29,14 @@ export class BlogsRepository {
           $set: blogUpdateDto,
         },
       );
-      if (!result) throw new NotFoundException('Blog not found');
+      if (!result)
+        throw new NotFoundException([
+          { message: 'Blog not found', field: 'BlogsRepository.updateBlog' },
+        ]);
     } catch {
-      throw new NotFoundException('Blog not found');
+      throw new NotFoundException([
+        { message: 'Blog not found', field: 'BlogsRepository.updateBlog' },
+      ]);
     }
   }
 
@@ -42,20 +47,30 @@ export class BlogsRepository {
           _id: new ObjectId(id),
         })
         .exec();
-      if (!result) throw new NotFoundException('Blog not found');
+      if (!result)
+        throw new NotFoundException([
+          { message: 'Blog not found', field: 'BlogsRepository.deleteBlog' },
+        ]);
       return result;
     } catch (error) {
-      throw new NotFoundException('Blog not found');
+      throw new NotFoundException([
+        { message: 'Blog not found', field: 'BlogsRepository.deleteBlog' },
+      ]);
     }
   }
 
   async findBlogById(id: string) {
     try {
       const result = await this.blogModel.findById({ _id: new ObjectId(id) });
-      if (!result) throw new NotFoundException('Blog not found');
+      if (!result)
+        throw new NotFoundException([
+          { message: 'Blog not found', field: 'BlogsRepository.findBlogById' },
+        ]);
       return result;
     } catch (error) {
-      throw new NotFoundException('Blog not found');
+      throw new NotFoundException([
+        { message: 'Blog not found', field: 'BlogsRepository.findBlogById' },
+      ]);
     }
   }
 }

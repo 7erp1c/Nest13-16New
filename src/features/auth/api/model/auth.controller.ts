@@ -28,7 +28,7 @@ import {
   NoContentResponse,
   TooManyRequestsResponse,
 } from '../../../../common/swagger/response.dto';
-import { EmailDto } from '../../../../common/swagger/input.type';
+import { CodeDto, LogInDto } from '../../../../common/swagger/input.type';
 @ApiTags('Auth')
 @Controller('auth')
 //@UseGuards(ThrottlerGuard) // указан в auth.module.ts
@@ -49,8 +49,10 @@ export class AuthController {
   async passwordRecovery(@Body() inputModelDto: UserEmailInputModel) {
     return await this.authService.passwordRecovery(inputModelDto);
   }
+
   @HttpCode(HttpStatus.OK)
   @Post('login')
+  @ApiBody({ type: LoginOrEmailInputModel })
   async logInUser(
     @Body() inputModelDto: LoginOrEmailInputModel,
     @Res({ passthrough: true }) res: Response,
@@ -68,7 +70,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post('registration-confirmation')
-  @ApiBody({ type: EmailDto })
+  @ApiBody({ type: CodeDto })
   @BadRequestResponse
   @TooManyRequestsResponse
   @NoContentResponse

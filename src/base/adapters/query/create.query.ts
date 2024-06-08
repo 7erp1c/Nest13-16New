@@ -13,7 +13,6 @@ export const createQuery = (query: QueryRequestType): QueryDto => {
     pageNumber: query.pageNumber ? query.pageNumber : 1,
     pageSize: query.pageSize ? query.pageSize : 10,
   };
-
   if (query.searchLoginTerm) searchData.searchLoginTerm = query.searchLoginTerm;
   if (query.searchEmailTerm) searchData.searchEmailTerm = query.searchEmailTerm;
   if (query.searchNameTerm) searchData.searchNameTerm = query.searchNameTerm;

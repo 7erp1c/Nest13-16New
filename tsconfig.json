@@ -18,6 +18,6 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "typeRoots": ["./src/interface/custom.d.ts"]
+    "typeRoots": ["./src/interface/custom.d.ts"],
   }
 }

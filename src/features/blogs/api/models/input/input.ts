@@ -20,3 +20,8 @@ export type QueryBlogsRequestType = {
   pageNumber?: number;
   pageSize?: number;
 };
+export type CommentCreateDto = {
+  content: string;
+  postId: string;
+  userId: string;
+};

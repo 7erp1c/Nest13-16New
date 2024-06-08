@@ -10,6 +10,7 @@ import {
   NewPasswordInputModel,
   UserEmailInputModel,
 } from '../../auth/api/model/input/loginOrEmailInputModel';
+import { User } from '../domain/user.entity';
 
 // Для провайдера всегда необходимо применять декоратор @Injectable() и регистрировать в модуле
 @Injectable()
@@ -82,9 +83,9 @@ export class UsersService {
     return await this.usersRepository.deleteUser(id);
   }
   async getUserById(userId: string) {
-    await this.usersRepository.getUserById(userId);
+    return await this.usersRepository.getUserById(userId);
   }
-  async getUserByEmail(email: string) {
+  async getUserByEmail(email: string): Promise<User> {
     return await this.usersRepository.getUserByEmail(email);
   }
   async create(email: string, name: string) {

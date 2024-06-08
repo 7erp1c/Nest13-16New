@@ -13,20 +13,33 @@ import {
   Put,
   Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import {
+  CommentCreateInputModel,
   CreatePostInputModels,
   UpdatePostInputModel,
 } from './models/input/create.post.input.models';
 import { BlogsService } from '../../blogs/aplication/blogs.service';
 import { PostsService } from '../aplication/posts.service';
 import { PostsQueryRepository } from '../infrastructure/posts.query-repository';
-import { QueryBlogsRequestType } from '../../blogs/api/models/input/input';
+import {
+  CommentCreateDto,
+  QueryBlogsRequestType,
+} from '../../blogs/api/models/input/input';
 import { createQuery } from '../../../base/adapters/query/create.query';
 import { QueryUsersRequestType } from '../../users/api/models/input/input';
 import { PostOutputDto } from './models/output/output.types';
 import { UpdateBlogInputModel } from '../../blogs/api/models/input/create.blog.input.model';
 import { QueryPostsRequestType } from './models/input/input';
+import { AuthGuard } from '../../../common/guards/auth.guard';
+import { Request } from 'express';
+import { CommentsService } from '../../comments/aplication/comments.service';
+import { CommentsQueryRepository } from '../../comments/infrastructure/comments.query.repository';
+import { AdminAuthGuard } from '../../../common/guards/auth.admin.guard';
+import { PostsLikesInputModel } from '../../likes/api/model/input/likes.input.models';
+import { LikesPostService } from '../../likes/aplication/likes.post.service';
+import { BlindGuard } from '../../../common/guards/blind.guard.token';
 
 @ApiTags('Posts')
 @Controller('posts')
@@ -35,46 +48,50 @@ export class PostsController {
     protected postsService: PostsService,
     protected blogsService: BlogsService,
     protected postsQueryRepository: PostsQueryRepository,
-    // protected commentsService: CommentsService,
+    protected commentsService: CommentsService,
+    protected commentsQueryRepository: CommentsQueryRepository,
+    protected likesService: LikesPostService,
   ) {}
 
-  @Get('/comment')
-  async getCommentsForPost() {}
+  @Put('/:id/like-status')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async updateAndCreateLikeStatus(
+    @Param('id') id: string,
+    @Body() inputModel: PostsLikesInputModel,
+    @Req() req: Request,
+  ) {
+    const findPost = await this.postsService.findPostById(id);
+    if (!findPost) throw new BadRequestException('Post not in Db');
+    return await this.likesService.createLikePost(
+      req.user.userId,
+      req.user.loginUser,
+      id,
+      inputModel,
+    );
+  }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  // async getAllPosts(@Query() query: QueryPostsRequestType) {
-  //   const { sortData } = createQuery(query);
-  //   try {
-  //     return await this.postsQueryRepository.getAllPosts(sortData);
-  //   } catch (error) {
-  //     throw new NotFoundException('What?');
-  //   }
-  // }
+  @UseGuards(BlindGuard)
   async getAllPosts(
     @Query() query: QueryPostsRequestType,
-    // @Req() req: Request,
+    @Req() req: Request,
   ) {
-    const { sortData, searchData } = createQuery(query);
-    // try {
-    // const authHeader = req.header('authorization')?.split(' ');
-    // const token = new AccessTokenService(
-    //   tokenServiceCommands.set,
-    //   authHeader[1],
-    // );
-    // const userId = token.decode().userId;
-    // return await this.postsQueryRepository.getAllPosts(
-    //   sortData,
-    //   null,
-    //   userId,
-    // );
-    // } catch {
-    return await this.postsQueryRepository.getAllPosts(sortData);
-
-    // }
+    const { sortData } = createQuery(query);
+    if (req.user && req.user.userId) {
+      return await this.postsQueryRepository.getAllPosts(
+        sortData,
+        undefined,
+        req.user.userId,
+      );
+    } else {
+      return await this.postsQueryRepository.getAllPosts(sortData);
+    }
   }
 
   @Post()
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createPost(@Body() inputModel: CreatePostInputModels) {
     const findBlogById = await this.blogsService.findBlogById(
@@ -94,11 +111,23 @@ export class PostsController {
 
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
-  async getPostById(@Param('id') id: string): Promise<PostOutputDto> {
-    return await this.postsQueryRepository.getPostById(id, null);
+  @UseGuards(BlindGuard)
+  async getPostById(
+    @Param('id') id: string,
+    @Req() req: Request,
+  ): Promise<PostOutputDto> {
+    // Проверяем, существует ли объект req.user и его свойство userId
+    if (req.user && req.user.userId) {
+      console.log('user', req.user.userId);
+      return await this.postsQueryRepository.getPostById(id, req.user.userId);
+    } else {
+      // Если req.user не существует или не имеет свойства userId, передаём null
+      return await this.postsQueryRepository.getPostById(id, null);
+    }
   }
 
   @Put('/:id')
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePost(
     @Param('id') postId: string,
@@ -108,24 +137,40 @@ export class PostsController {
   }
 
   @Delete('/:id')
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') postId: string) {
     return await this.postsService.deletePost(postId);
   }
 
-  // @Post(':id/comments')
-  // async createNewCommentToPost(
-  //   @Param('id') id: string,
-  //   @Body() inputModel: CommentCreateInputModel,
-  // ) {
-  //   const commentCreateDto: CommentCreateDto = {
-  //     content: inputModel.content,
-  //     postId: id,
-  //     userId: 'user?.id',
-  //     userLogin: user.login,
-  //   };
-  //   const commentId: string =
-  //     await this.commentsService.createComment(commentCreateDto);
-  //   return await this.commentsQueryRepository.getById(commentId);
-  // }
+  @Get(':id/comments')
+  async getAllCommentsForPost(
+    @Param('id') id: string,
+    @Query() query: QueryUsersRequestType,
+    @Req() req: Request,
+  ) {
+    const { sortData } = createQuery(query);
+    return await this.commentsQueryRepository.getAllCommentsForPost(
+      sortData,
+      id,
+      undefined,
+    );
+  }
+
+  @Post(':id/comments')
+  @UseGuards(AuthGuard)
+  async createNewCommentToPost(
+    @Param('id') id: string,
+    @Req() req: Request,
+    @Body() inputModel: CommentCreateInputModel,
+  ) {
+    const commentCreateDto: CommentCreateDto = {
+      content: inputModel.content,
+      postId: id,
+      userId: req.user.userId,
+    };
+    const commentId: string =
+      await this.commentsService.createComment(commentCreateDto);
+    return await this.commentsQueryRepository.getCommentById(commentId);
+  }
 }

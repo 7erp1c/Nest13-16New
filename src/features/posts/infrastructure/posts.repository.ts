@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { NotFoundException } from '@nestjs/common';
-import { UpdateBlogInputModel } from '../../blogs/api/models/input/create.blog.input.model';
 import { UpdatePostInputModel } from '../api/models/input/create.post.input.models';
 
 export class PostsRepository {
@@ -32,6 +31,20 @@ export class PostsRepository {
     try {
       const result = await this.postModel
         .findOneAndDelete({
+          _id: new ObjectId(id),
+        })
+        .exec();
+      if (!result) throw new NotFoundException('Post not found');
+      return result;
+    } catch (error) {
+      throw new NotFoundException('Post not found');
+    }
+  }
+
+  async findPostById(id: string) {
+    try {
+      const result = await this.postModel
+        .findOne({
           _id: new ObjectId(id),
         })
         .exec();

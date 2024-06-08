@@ -6,7 +6,6 @@ import {
 import { DateCreate } from '../../../base/adapters/get-current-date';
 import { Post } from '../domain/posts.entity';
 import { PostsRepository } from '../infrastructure/posts.repository';
-import { UpdateBlogInputModel } from '../../blogs/api/models/input/create.blog.input.model';
 
 @Injectable()
 export class PostsService {
@@ -35,5 +34,9 @@ export class PostsService {
 
   async deletePost(postId: string) {
     return await this.postsRepository.deletePost(postId);
+  }
+
+  async findPostById(id: string) {
+    return await this.postsRepository.findPostById(id);
   }
 }

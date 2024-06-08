@@ -9,6 +9,8 @@ import { BlogsController } from './features/blogs/api/blogs.controller';
 import { Blog, BlogSchema } from './features/blogs/domain/blogs.entity';
 import { Post, PostsSchema } from './features/posts/domain/posts.entity';
 import {
+  CommentLikes,
+  CommentLikesSchema,
   PostsLikes,
   PostsLikesSchema,
 } from './features/likes/domain/likes.entity';
@@ -20,6 +22,7 @@ import { RandomNumberService } from './common/service/random/randomNumberUUVid';
 import {
   authProviders,
   blogsProviders,
+  commentsProviders,
   commonsProvider,
   emailProviders,
   JWTProviders,
@@ -28,6 +31,10 @@ import {
   testingProvider,
   usersProviders,
 } from './settings/setting-providers';
+import {
+  CommentsDb,
+  CommentSchema,
+} from './features/comments/domain/comments.entity';
 //const URI = appSettings.api.MONGO_CONNECTION_URI;
 //console.log(URI, 'URI**');
 @Module({
@@ -39,12 +46,17 @@ import {
         limit: 2,
       },
     ]),
-    MongooseModule.forRoot(appSettings.api.MONGO_CONNECTION_URI),
+    MongooseModule.forRoot(
+      appSettings.env.isTesting()
+        ? appSettings.api.MONGO_CONNECTION_URI_FOR_TESTS
+        : appSettings.api.MONGO_CONNECTION_URI,
+    ),
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostsSchema },
-      // { name: Comment.name, schema: CommentSchema },
+      { name: CommentsDb.name, schema: CommentSchema },
+      { name: CommentLikes.name, schema: CommentLikesSchema },
       { name: PostsLikes.name, schema: PostsLikesSchema },
     ]),
   ],
@@ -59,6 +71,7 @@ import {
     ...likesProviders,
     ...JWTProviders,
     ...emailProviders,
+    ...commentsProviders,
     InputUniqDataIsExistConstraint,
     RandomNumberService,
   ],

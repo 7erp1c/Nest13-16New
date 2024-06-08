@@ -1,6 +1,5 @@
 import { IsStringLength } from '../../../../../common/decorators/validate/is.string.length';
-import { IsString } from 'class-validator';
-import { CreateBlogInputModel } from '../../../../blogs/api/models/input/create.blog.input.model';
+import { IsOptionalString } from '../../../../../common/decorators/validate/is.optional.string';
 
 export class CreatePostInputModels {
   @IsStringLength(1, 30)
@@ -12,7 +11,7 @@ export class CreatePostInputModels {
   @IsStringLength(1, 1000)
   content: string;
 
-  @IsString()
+  @IsOptionalString()
   blogId: string;
 }
 export class UpdatePostInputModel extends CreatePostInputModels {}
@@ -24,5 +23,9 @@ export class CreatePostInputModelByBlog {
   shortDescription: string;
 
   @IsStringLength(0, 1000)
+  content: string;
+}
+export class CommentCreateInputModel {
+  @IsStringLength(20, 300)
   content: string;
 }

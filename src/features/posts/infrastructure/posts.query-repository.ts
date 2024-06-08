@@ -1,4 +1,3 @@
-import { QuerySortType } from '../../../base/adapters/query/types';
 import { BlogsQueryRepository } from '../../blogs/infrastructure/blogs.query-repository';
 import { Model } from 'mongoose';
 import { Post, postsDocument } from '../domain/posts.entity';
@@ -7,7 +6,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PostOutputDto } from '../api/models/output/output.types';
 import { postMapper } from '../api/models/output/post.output.models';
 import { PostsLikesQueryRepository } from '../../likes/infrastructure/posts.likes.query.repository';
-import { ObjectId, WithId } from 'mongodb';
 import { SortPostRepositoryType } from '../../users/api/models/input/input';
 
 @Injectable()
@@ -62,7 +60,7 @@ export class PostsQueryRepository {
     for (let i = 0; i < posts.length; i++) {
       const likes = await this.postsLikesQueryRepository.getLikes(
         posts[i]._id.toString(),
-        undefined,
+        userId,
       );
       mappedPosts.push(postMapper(posts[i], likes));
     }
@@ -95,11 +93,11 @@ export class PostsQueryRepository {
       const post: postsDocument | null = await this.postModel.findById({
         _id: new Object(id),
       });
-      if (!post) throw new NotFoundException();
+      if (!post) throw new NotFoundException('Post not found');
       const likes = await this.postsLikesQueryRepository.getLikes(id, userId!);
       return postMapper(post, likes);
     } catch {
-      throw new NotFoundException();
+      throw new NotFoundException('Catch getPostById');
     }
   }
 }

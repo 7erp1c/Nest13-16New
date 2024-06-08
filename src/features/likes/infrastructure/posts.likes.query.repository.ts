@@ -17,7 +17,7 @@ export class PostsLikesQueryRepository {
 
     if (userId) {
       const userLike = await this.postsLikesModel
-        .findOne({ $and: [{ postId: postId }, { likeOwnerId: userId }] })
+        .findOne({ $and: [{ postId: postId }, { likedUserId: userId }] })
         .lean();
       if (userLike) {
         likeStatus = userLike.status;
@@ -39,8 +39,8 @@ export class PostsLikesQueryRepository {
     return {
       likesCount: likesCount,
       dislikesCount: dislikesCount,
-      newestLikes: newestLikes.map(postLikesMapper),
       myStatus: likeStatus,
+      newestLikes: newestLikes.map(postLikesMapper),
     };
   }
 }
@@ -48,7 +48,7 @@ export class PostsLikesQueryRepository {
 export const postLikesMapper = (like: PostsLikesDocument): NewestLikeType => {
   return {
     addedAt: like.addedAt,
-    userId: like.likeOwnerId,
-    login: like.likeOwnerName,
+    userId: like.likedUserId,
+    login: like.likedUserName,
   };
 };

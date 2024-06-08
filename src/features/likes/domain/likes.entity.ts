@@ -11,7 +11,7 @@ export class CommentLikes {
   commentId: string;
 
   @Prop()
-  likeOwnerId: string;
+  likedUserId: string;
 
   @Prop()
   status: LikeStatusType;
@@ -23,10 +23,10 @@ export class PostsLikes {
   postId: string;
 
   @Prop()
-  likeOwnerId: string;
+  likedUserId: string;
 
   @Prop()
-  likeOwnerName: string;
+  likedUserName: string;
 
   @Prop()
   addedAt: string;

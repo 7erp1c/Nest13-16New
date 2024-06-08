@@ -56,16 +56,18 @@ export class TokenService {
   //   };
   // }
   //создание access токена
-  async createJWT(id: string) {
-    const payload = { userId: id };
+  async createJWT(id: string, login: string) {
+    console.log('idTOKEN', id);
+    console.log('LoginTOKEN', login);
+    const payload = { userId: id, loginUser: login };
     return this.jwtService.signAsync(payload, { secret: jwtConstants.secret });
     // jwt.sign({ userId: id }, appSettings.api.JWT_SECRET, {
     //   expiresIn: appSettings.api.ACCESS_TOKEN_EXPIRATION_TIME,
     // });
   }
   //создание refresh токена
-  async createJWTRefresh(id: string) {
-    const payload = { userId: id };
+  async createJWTRefresh(id: string, login: string) {
+    const payload = { userId: id, loginUser: login };
     return this.jwtService.sign(payload, { secret: jwtConstants.secret });
 
     // const deviceId = uuidv4();

@@ -168,11 +168,15 @@ export class AuthService {
         `status: ${HttpStatus.UNAUTHORIZED}, Method: logInUser, field: findUser, enter a different password`,
       );
     //создаём token:
+    console.log('id', findUser._id.toString());
+    console.log('Login', findUser.login);
     const tokenAccess = await this.tokenService.createJWT(
       findUser._id.toString(),
+      findUser.login,
     );
-    const tokenRefresh = await this.tokenService.createJWT(
+    const tokenRefresh = await this.tokenService.createJWTRefresh(
       findUser._id.toString(),
+      findUser.login,
     );
     if (!tokenAccess || !tokenRefresh)
       throw new UnauthorizedException('Token not created');

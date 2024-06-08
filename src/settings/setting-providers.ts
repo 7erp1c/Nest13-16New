@@ -19,6 +19,15 @@ import { PostsLikesQueryRepository } from '../features/likes/infrastructure/post
 import { EmailAdapter } from '../common/service/email/email-adapter';
 import { EmailsManager } from '../common/service/email/email-manager';
 import { AuthGuard } from '../common/guards/auth.guard';
+import { CommentsQueryRepository } from '../features/comments/infrastructure/comments.query.repository';
+import { CommentsLikesQueryRepository } from '../features/likes/infrastructure/comments.likes.query.repository';
+import { CommentsService } from '../features/comments/aplication/comments.service';
+import { CommentsController } from '../features/comments/api/comments.controller';
+import { CommentsRepository } from '../features/comments/infrastructure/comments.repository';
+import { LikesPostService } from '../features/likes/aplication/likes.post.service';
+import { PostLikesRepository } from '../features/likes/infrastructure/post.likes.repository';
+import { LikesCommentsService } from '../features/likes/aplication/likes.comments.service';
+import { CommentsLikesRepository } from '../features/likes/infrastructure/comments.likes.repository';
 
 export const authProviders: Provider[] = [AuthService, AuthGuard];
 export const JWTProviders: Provider[] = [JwtService, TokenService];
@@ -39,5 +48,18 @@ export const usersProviders: Provider[] = [
 ];
 export const testingProvider: Provider[] = [TestingService, TestingRepository];
 export const commonsProvider: Provider[] = [BcryptAdapter, DateCreate];
-export const likesProviders: Provider[] = [PostsLikesQueryRepository];
+export const likesProviders: Provider[] = [
+  LikesPostService,
+  LikesCommentsService,
+  CommentsLikesRepository,
+  PostLikesRepository,
+  PostsLikesQueryRepository,
+  CommentsLikesQueryRepository,
+];
 export const emailProviders: Provider[] = [EmailAdapter, EmailsManager];
+export const commentsProviders: Provider[] = [
+  CommentsController,
+  CommentsService,
+  CommentsRepository,
+  CommentsQueryRepository,
+];

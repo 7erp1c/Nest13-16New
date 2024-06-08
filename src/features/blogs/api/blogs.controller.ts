@@ -13,6 +13,7 @@ import {
   Put,
   Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import {
   CreateBlogInputModel,
@@ -28,6 +29,7 @@ import { async } from 'rxjs';
 import { PostsService } from '../../posts/aplication/posts.service';
 import { PostsQueryRepository } from '../../posts/infrastructure/posts.query-repository';
 import { QueryUsersRequestType } from '../../users/api/models/input/input';
+import { AdminAuthGuard } from '../../../common/guards/auth.admin.guard';
 
 @ApiTags('Blogs')
 @Controller('blogs')
@@ -51,6 +53,7 @@ export class BlogsController {
   }
 
   @Post()
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createBlog(
     @Body() CreateModel: CreateBlogInputModel,
@@ -81,6 +84,7 @@ export class BlogsController {
   }
 
   @Post(':blogId/posts')
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createPostForBlog(
     @Param('blogId') blogId: string,
@@ -110,6 +114,7 @@ export class BlogsController {
   }
 
   @Put(':id')
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
     @Param('id') blogId: string,
@@ -119,6 +124,7 @@ export class BlogsController {
   }
 
   @Delete(':id')
+  @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteBlog(@Param('id') blogId: string) {
     return await this.blogsService.deleteBlog(blogId);

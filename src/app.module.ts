@@ -43,6 +43,7 @@ import {
   Session,
 } from './features/devices/domain/device.entity';
 import { DevicesController } from './features/devices/api/devices.controller';
+import cookieParser from 'cookie-parser';
 //const URI = appSettings.api.MONGO_CONNECTION_URI;
 //console.log(URI, 'URI**');
 @Module({
@@ -100,6 +101,10 @@ import { DevicesController } from './features/devices/api/devices.controller';
 export class AppModule implements NestModule {
   // https://docs.nestjs.com/middleware#applying-middleware
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer
+      .apply(LoggerMiddleware)
+      .forRoutes('*')
+      .apply(cookieParser())
+      .forRoutes('*');
   }
 }

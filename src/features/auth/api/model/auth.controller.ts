@@ -68,10 +68,13 @@ export class AuthController {
       inputModelDto,
       sessionInputModel,
     );
+    console.log('refreshToken', login.tokenRefresh);
+    console.log('accessToken', login.tokenAccess);
     res.cookie('refreshToken', login.tokenRefresh, {
       httpOnly: true,
       secure: true,
     });
+
     return { accessToken: login.tokenAccess };
   }
   @Post('refresh-token')

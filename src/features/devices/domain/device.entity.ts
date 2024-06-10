@@ -6,10 +6,10 @@ export type SessionDocument = HydratedDocument<Session>;
 @Schema()
 class RefreshTokenSchema {
   @Prop()
-  createdAt: number;
+  createdAt: string;
 
   @Prop()
-  expiredAt: number;
+  expiredAt: string;
 }
 
 @Schema()
@@ -27,12 +27,12 @@ export class Session {
   ip: string;
 
   @Prop()
-  lastActiveDate: number;
+  lastActiveDate: string;
 
   @Prop({ type: RefreshTokenSchema })
   refreshToken: {
-    createdAt: number;
-    expiredAt: number;
+    createdAt: string;
+    expiredAt: string;
   };
 }
 

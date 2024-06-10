@@ -1,9 +1,51 @@
-import { Controller } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-@ApiTags('Devices')
-@Controller('devices')
+import { Request } from 'express';
+import { SessionsQueryRepository } from '../infrastructure/device.query.repository';
+import { DevicesService } from '../aplication/devices.service';
+@ApiTags('Security')
+@Controller('security')
 export class DevicesController {
-  constructor() {}
+  constructor(
+    protected sessionsQueryRepository: SessionsQueryRepository,
+    protected sessionsService: DevicesService,
+  ) {}
+  @Get('devices')
+  @HttpCode(HttpStatus.OK)
+  async getDevices(@Req() req: Request) {
+    try {
+      return await this.sessionsQueryRepository.getSessionsByUserId(
+        req.cookies.refreshToken,
+      );
+    } catch {
+      throw new UnauthorizedException(
+        'DeviceController.getDevices, in cookie no refreshToken',
+      );
+    }
+  }
 
-  async getDevices() {}
+  @Delete('devices')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async terminateAllActiveSessions(@Req() req: Request) {
+    await this.sessionsService.terminateAllSessions(req.cookies.refreshToken);
+    return;
+  }
+
+  @Delete('devices/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async terminateSession(@Param('id') id: string, @Req() req: Request) {
+    return await this.sessionsService.terminateSession(
+      id,
+      req.cookies.refreshToken,
+    );
+  }
 }

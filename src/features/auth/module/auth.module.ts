@@ -10,6 +10,7 @@ import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { TokenService } from '../../../common/service/jwt/token.service';
 import { EmailsManager } from '../../../common/service/email/email-manager';
 import { DateCreate } from '../../../base/adapters/get-current-date';
+import { DevicesService } from '../../devices/aplication/devices.service';
 
 @Module({
   imports: [
@@ -26,10 +27,11 @@ import { DateCreate } from '../../../base/adapters/get-current-date';
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
-    TokenService,
     EmailsManager,
     DateCreate,
     AuthGuard,
+    DevicesService,
+    TokenService,
   ],
   controllers: [AuthController],
   exports: [AuthService],

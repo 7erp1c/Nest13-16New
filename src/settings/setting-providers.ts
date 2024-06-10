@@ -31,9 +31,15 @@ import { CommentsLikesRepository } from '../features/likes/infrastructure/commen
 import { DevicesController } from '../features/devices/api/devices.controller';
 import { DevicesService } from '../features/devices/aplication/devices.service';
 import { DeviceRepository } from '../features/devices/infrastructure/device.repository';
+import { AuthModule } from '../features/auth/module/auth.module';
+import { SessionsQueryRepository } from '../features/devices/infrastructure/device.query.repository';
 
 export const authProviders: Provider[] = [AuthService, AuthGuard];
-export const devicesProviders: Provider[] = [DevicesService, DeviceRepository];
+export const devicesProviders: Provider[] = [
+  DevicesService,
+  DeviceRepository,
+  SessionsQueryRepository,
+];
 export const JWTProviders: Provider[] = [JwtService, TokenService];
 export const blogsProviders: Provider[] = [
   BlogsRepository,

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpException,
   HttpStatus,
   Injectable,
   UnauthorizedException,
@@ -7,31 +8,31 @@ import {
 
 import { UserCreateInputModel } from '../../users/api/models/input/create.user.input.model';
 import { UsersService } from '../../users/application/users.service';
-import { TokenService } from '../../../common/service/jwt/token.service';
 import {
   ConfirmationCodeInputModel,
   LoginOrEmailInputModel,
   NewPasswordInputModel,
   UserEmailInputModel,
 } from '../api/model/input/loginOrEmailInputModel';
-import { JwtService } from '@nestjs/jwt';
 import { BcryptAdapter } from '../../../base/adapters/bcrypt.adapter';
 import { RandomNumberService } from '../../../common/service/random/randomNumberUUVid';
 import { EmailsManager } from '../../../common/service/email/email-manager';
 import { DateCreate } from '../../../base/adapters/get-current-date';
 import { Error } from 'mongoose';
+import { SessionInputModel } from '../../devices/api/model/input/session.input.models';
+import { DevicesService } from '../../devices/aplication/devices.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly tokenService: TokenService,
-    private readonly jwtService: JwtService,
     private readonly bcryptAdapter: BcryptAdapter,
     private readonly randomNumberService: RandomNumberService,
     private readonly emailsManager: EmailsManager,
     private readonly dateCreate: DateCreate,
+    private readonly devicesService: DevicesService,
   ) {}
+
   async newPassword(inputModelDto: NewPasswordInputModel) {
     const user = await this.usersService.getUserByCode(inputModelDto.code);
     //сравним input-password и hash c Db, незя использовать старый
@@ -58,6 +59,7 @@ export class AuthService {
       );
     return;
   }
+
   async passwordRecovery(inputModelDto: UserEmailInputModel) {
     const user = await this.usersService.getUserByEmail(inputModelDto.email);
     if (!user.recoveryPassword.isUsed) {
@@ -77,7 +79,7 @@ export class AuthService {
       return sendEmail;
     }
     if (user.recoveryPassword.isUsed) {
-      const RecoveryCode = this.randomNumberService.generateRandomUUID();
+      const RecoveryCode = await this.randomNumberService.generateRandomUUID();
       const updateRecoveryUser = this.usersService.updateRecovery(
         user.email,
         RecoveryCode,
@@ -131,7 +133,7 @@ export class AuthService {
   }
 
   async registrationEmailResending(inputModelDto: UserEmailInputModel) {
-    const RecoveryCode = this.randomNumberService.generateRandomUUID();
+    const RecoveryCode = await this.randomNumberService.generateRandomUUID();
     const user = await this.usersService.getUserByEmail(inputModelDto.email);
     if (!user || user.emailConfirmation.isConfirmed)
       throw new BadRequestException([
@@ -154,36 +156,46 @@ export class AuthService {
     return updateUserConfirmationData;
   }
 
-  async logInUser(inputModelDto: LoginOrEmailInputModel) {
+  async logInUser(
+    inputModelDto: LoginOrEmailInputModel,
+    sessionInputModel: SessionInputModel,
+  ) {
     //ищем User по логину или email (res ошибка внутри)
-    const findUser =
-      await this.usersService.getUserByLoginOrEmail(inputModelDto);
+    const user = await this.usersService.getUserByLoginOrEmail(inputModelDto);
+    if (!user)
+      throw new HttpException('Bad login or password', HttpStatus.UNAUTHORIZED);
+    const userId = user._id.toString();
+    const userName = user.login;
     //сравним input-пароль c паролем в Db
     const compareHash = await this.bcryptAdapter.compareHash(
       inputModelDto.password,
-      findUser.hash,
+      user.hash,
     );
     if (!compareHash)
       throw new UnauthorizedException(
         `status: ${HttpStatus.UNAUTHORIZED}, Method: logInUser, field: findUser, enter a different password`,
       );
+    return await this.devicesService.createSession(
+      sessionInputModel,
+      userId,
+      userName,
+    );
     //создаём token:
-    console.log('id', findUser._id.toString());
-    console.log('Login', findUser.login);
-    const tokenAccess = await this.tokenService.createJWT(
-      findUser._id.toString(),
-      findUser.login,
-    );
-    const tokenRefresh = await this.tokenService.createJWTRefresh(
-      findUser._id.toString(),
-      findUser.login,
-    );
-    if (!tokenAccess || !tokenRefresh)
-      throw new UnauthorizedException('Token not created');
-    //возвращаем two token:
-    return {
-      tokenAccess,
-      tokenRefresh,
-    };
+    //   const tokenAccess = await this.tokenService.createJWT(
+    //     findUser._id.toString(),
+    //     findUser.login,
+    //   );
+    //   const tokenRefresh = await this.tokenService.createJWTRefresh(
+    //     findUser._id.toString(),
+    //     findUser.login,
+    //   );
+    //   if (!tokenAccess || !tokenRefresh)
+    //     throw new UnauthorizedException('Token not created');
+    //   //возвращаем two token:
+    //   return {
+    //     tokenAccess,
+    //     tokenRefresh,
+    //   };
+    // }
   }
 }

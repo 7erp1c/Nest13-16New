@@ -24,6 +24,7 @@ import {
   blogsProviders,
   commentsProviders,
   commonsProvider,
+  devicesProviders,
   emailProviders,
   JWTProviders,
   likesProviders,
@@ -35,6 +36,13 @@ import {
   CommentsDb,
   CommentSchema,
 } from './features/comments/domain/comments.entity';
+import { BlogExistsValidator } from './common/decorators/validate/blogId/isBlogExist';
+import { CommentsController } from './features/comments/api/comments.controller';
+import {
+  DevicesSchema,
+  Session,
+} from './features/devices/domain/device.entity';
+import { DevicesController } from './features/devices/api/devices.controller';
 //const URI = appSettings.api.MONGO_CONNECTION_URI;
 //console.log(URI, 'URI**');
 @Module({
@@ -58,10 +66,12 @@ import {
       { name: CommentsDb.name, schema: CommentSchema },
       { name: CommentLikes.name, schema: CommentLikesSchema },
       { name: PostsLikes.name, schema: PostsLikesSchema },
+      { name: Session.name, schema: DevicesSchema },
     ]),
   ],
   // Регистрация провайдеров
   providers: [
+    ...devicesProviders,
     ...authProviders,
     ...usersProviders,
     ...blogsProviders,
@@ -73,14 +83,17 @@ import {
     ...emailProviders,
     ...commentsProviders,
     InputUniqDataIsExistConstraint,
+    BlogExistsValidator,
     RandomNumberService,
   ],
   // Регистрация контроллеров
   controllers: [
     AuthController,
+    DevicesController,
     UsersController,
     BlogsController,
     PostsController,
+    CommentsController,
     TestingController,
   ],
 })

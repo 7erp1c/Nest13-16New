@@ -5,7 +5,7 @@ import { appSettings } from '../../../settings/app-settings';
 import { ObjectId } from 'mongodb';
 import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from '../../../features/auth/setting/constants';
-
+import moment from 'moment';
 @Injectable()
 export class TokenService {
   constructor(private jwtService: JwtService) {}
@@ -117,11 +117,14 @@ export class TokenService {
   ): Promise<RefreshTokenPayloadType | null> {
     const decodedToken: any = await this.decode(token);
     if (!decodedToken) return null;
+    const iatDate = moment.unix(decodedToken.iat).toISOString();
+    const expDate = moment.unix(decodedToken.exp).toISOString();
+
     return {
       userId: decodedToken.userId,
       deviceId: decodedToken.deviceId,
-      iat: decodedToken.iat,
-      exp: decodedToken.exp,
+      iat: iatDate,
+      exp: expDate,
     };
   }
   // async checkToken(token: string) {

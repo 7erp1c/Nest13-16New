@@ -144,12 +144,24 @@ export class PostsController {
   }
 
   @Get(':id/comments')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(BlindGuard)
   async getAllCommentsForPost(
     @Param('id') id: string,
     @Query() query: QueryUsersRequestType,
     @Req() req: Request,
   ) {
     const { sortData } = createQuery(query);
+    const findPostById = await this.postsService.findPostById(id);
+    if (!findPostById) throw new BadRequestException('Post not found');
+    if (req.user && req.user.userId) {
+      return await this.commentsQueryRepository.getAllCommentsForPost(
+        sortData,
+        id,
+        req.user.userId,
+      );
+    }
+
     return await this.commentsQueryRepository.getAllCommentsForPost(
       sortData,
       id,
@@ -164,6 +176,8 @@ export class PostsController {
     @Req() req: Request,
     @Body() inputModel: CommentCreateInputModel,
   ) {
+    const findPost = await this.postsService.findPostById(id);
+    if (!findPost) throw new NotFoundException('post not found');
     const commentCreateDto: CommentCreateDto = {
       content: inputModel.content,
       postId: id,

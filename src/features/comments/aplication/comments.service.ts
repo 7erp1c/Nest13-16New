@@ -27,8 +27,6 @@ export class CommentsService {
 
   async createComment(createDto: CommentCreateDto): Promise<string> {
     const createdAt = await this.dateCreate.getCurrentDateInISOStringFormat();
-
-    await this.postService.findPostById(createDto.postId);
     const user = await this.userService.getUserById(createDto.userId);
     if (!user) throw new BadRequestException();
 

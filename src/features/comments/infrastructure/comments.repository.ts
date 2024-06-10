@@ -16,7 +16,7 @@ export class CommentsRepository {
       const result = await this.commentModel.findOneAndUpdate(
         { _id: new ObjectId(id) },
         {
-          $set: inputModel,
+          $set: { content: inputModel.content },
         },
       );
       if (!result) throw new NotFoundException('Post not found');
@@ -32,10 +32,10 @@ export class CommentsRepository {
           _id: new ObjectId(id),
         })
         .exec();
-      if (!result) throw new NotFoundException('Post not found');
+      if (!result) throw new NotFoundException('Comment not found');
       return result;
     } catch (error) {
-      throw new NotFoundException('Post not found');
+      throw new NotFoundException('Comment not found');
     }
   }
   async createComment(commentDto: CommentsDb): Promise<string> {

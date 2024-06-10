@@ -30,6 +30,8 @@ import { PostsService } from '../../posts/aplication/posts.service';
 import { PostsQueryRepository } from '../../posts/infrastructure/posts.query-repository';
 import { QueryUsersRequestType } from '../../users/api/models/input/input';
 import { AdminAuthGuard } from '../../../common/guards/auth.admin.guard';
+import { BlindGuard } from '../../../common/guards/blind.guard.token';
+import { Request } from 'express';
 
 @ApiTags('Blogs')
 @Controller('blogs')
@@ -63,23 +65,29 @@ export class BlogsController {
 
   @Get(':blogId/posts')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(BlindGuard)
   async getAllPostsForBlog(
     @Param('blogId') blogId: string,
     @Query() query: QueryUsersRequestType,
+    @Req() req: Request,
   ) {
     const { sortData, searchData } = createQuery(query);
-    try {
-      const findBlogById = await this.blogsService.findBlogById(blogId);
-      if (!findBlogById) {
-        throw new BadRequestException('Sorry bro, blog not found');
-      }
-      console.log(blogId);
+    const findBlogById = await this.blogsService.findBlogById(blogId);
+    if (!findBlogById) {
+      throw new BadRequestException('Sorry bro, blog not found');
+    }
+    if (req.user && req.user.userId) {
       return await this.postsQueryRepository.getAllPosts(
         sortData,
         findBlogById._id.toString(),
+        req.user.userId,
       );
-    } catch {
-      throw new NotFoundException();
+    } else {
+      return await this.postsQueryRepository.getAllPosts(
+        sortData,
+        findBlogById._id.toString(),
+        undefined,
+      );
     }
   }
 

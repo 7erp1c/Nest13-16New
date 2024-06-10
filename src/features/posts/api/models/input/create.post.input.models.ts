@@ -1,5 +1,6 @@
 import { IsStringLength } from '../../../../../common/decorators/validate/is.string.length';
 import { IsOptionalString } from '../../../../../common/decorators/validate/is.optional.string';
+import { IsBlogExist } from '../../../../../common/decorators/validate/blogId/isBlogExist';
 
 export class CreatePostInputModels {
   @IsStringLength(1, 30)
@@ -12,6 +13,7 @@ export class CreatePostInputModels {
   content: string;
 
   @IsOptionalString()
+  @IsBlogExist()
   blogId: string;
 }
 export class UpdatePostInputModel extends CreatePostInputModels {}

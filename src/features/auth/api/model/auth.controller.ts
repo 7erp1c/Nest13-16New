@@ -28,10 +28,12 @@ import {
   NoContentResponse,
   TooManyRequestsResponse,
 } from '../../../../common/swagger/response.dto';
-import { CodeDto, LogInDto } from '../../../../common/swagger/input.type';
+import { CodeDto } from '../../../../common/swagger/input.type';
+import { SessionInputModel } from '../../../devices/api/model/input/session.input.models';
+
 @ApiTags('Auth')
 @Controller('auth')
-//@UseGuards(ThrottlerGuard) // указан в auth.module.ts
+//@UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(
     protected authService: AuthService,
@@ -56,9 +58,16 @@ export class AuthController {
   async logInUser(
     @Body() inputModelDto: LoginOrEmailInputModel,
     @Res({ passthrough: true }) res: Response,
-    //@Req() req: Request,
+    @Req() req: Request,
   ) {
-    const login = await this.authService.logInUser(inputModelDto);
+    const sessionInputModel: SessionInputModel = {
+      deviceTitle: req.header('user-agent')?.split(' ')[1] || 'unknown',
+      ip: req.ip || 'unknown',
+    };
+    const login = await this.authService.logInUser(
+      inputModelDto,
+      sessionInputModel,
+    );
     res.cookie('refreshToken', login.tokenRefresh, {
       httpOnly: true,
       secure: true,

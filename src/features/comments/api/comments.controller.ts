@@ -23,6 +23,7 @@ import { CommentsService } from '../aplication/comments.service';
 import { LikesCommentsService } from '../../likes/aplication/likes.comments.service';
 import { CommentsQueryRepository } from '../infrastructure/comments.query.repository';
 import { CommentUpdateInputModel } from './input/comments.input.model';
+import { BlindGuard } from '../../../common/guards/blind.guard.token';
 
 @ApiTags('Comments')
 @Controller('comments')
@@ -36,10 +37,11 @@ export class CommentsController {
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateOrCreateCommentLike(
-    @Param('id') id: string,
+    @Param('commentId') id: string,
     @Body() inputModel: CommentsLikesInputModel,
     @Req() req: Request,
   ) {
+    console.log('commentId', id);
     const comment = await this.commentsService.getCommentById(id);
     if (!comment) throw new NotFoundException('Comment Not Found');
 
@@ -54,11 +56,11 @@ export class CommentsController {
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async UpdateComment(
-    @Param('id') id: string,
+    @Param('commentId') id: string,
     @Body() inputModel: CommentUpdateInputModel,
     @Req() req: Request,
   ) {
-    const updateContent = await this.commentsService.updateComment(
+    return await this.commentsService.updateComment(
       req.params.commentId,
       inputModel,
       req.user.userId,
@@ -66,22 +68,29 @@ export class CommentsController {
     //403
   }
 
-  @Delete('/:id')
+  @Delete('/:commentId')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteCommentById(@Param('id') id: string, @Req() req: Request) {
+  async deleteCommentById(@Param('commentId') id: string, @Req() req: Request) {
+    const findCommentById = await this.commentsService.getCommentById(id);
+    if (!findCommentById) throw new BadRequestException('Comment nor found');
     return await this.commentsService.deleteComment(id, req.user.userId);
     //403
   }
 
   @Get('/:id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(BlindGuard)
   async commentById(@Param('id') id: string, @Req() req: Request) {
-    const result = await this.commentsQueryRepository.getCommentById(
-      id,
-      req.user.userId!,
-    );
-    if (!result) throw new NotFoundException('Not Found');
-    return result;
+    const findCommentById = await this.commentsService.getCommentById(id);
+    if (!findCommentById) throw new BadRequestException('Comment nor found');
+    if (req.user && req.user.userId) {
+      return await this.commentsQueryRepository.getCommentById(
+        id,
+        req.user.userId!,
+      );
+    } else {
+      return await this.commentsQueryRepository.getCommentById(id, undefined);
+    }
   }
 }

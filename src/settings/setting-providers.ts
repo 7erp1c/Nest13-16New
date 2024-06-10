@@ -28,8 +28,12 @@ import { LikesPostService } from '../features/likes/aplication/likes.post.servic
 import { PostLikesRepository } from '../features/likes/infrastructure/post.likes.repository';
 import { LikesCommentsService } from '../features/likes/aplication/likes.comments.service';
 import { CommentsLikesRepository } from '../features/likes/infrastructure/comments.likes.repository';
+import { DevicesController } from '../features/devices/api/devices.controller';
+import { DevicesService } from '../features/devices/aplication/devices.service';
+import { DeviceRepository } from '../features/devices/infrastructure/device.repository';
 
 export const authProviders: Provider[] = [AuthService, AuthGuard];
+export const devicesProviders: Provider[] = [DevicesService, DeviceRepository];
 export const JWTProviders: Provider[] = [JwtService, TokenService];
 export const blogsProviders: Provider[] = [
   BlogsRepository,

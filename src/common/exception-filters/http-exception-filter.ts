@@ -16,13 +16,22 @@ export class ErrorExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp(); //говорим серваку переключится в http (host.switchToHttp()), он возвращает контекст
     const response = ctx.getResponse<Response>(); //у контекста мы берем res
-    //const request = ctx.getRequest<Request>(); //у контекста мы берем req
+    const error = exception as Error;
+    if (error.name === 'TokenExpiredError') {
+      // Ошибка истекшего токена
+      return response.status(HttpStatus.UNAUTHORIZED).json({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        timestamp: new Date().toISOString(),
+        path: ctx.getRequest().url,
+        message: 'Token expired',
+      });
+    }
     if (process.env.ENV !== 'PRODUCTION') {
-      response
+      return response
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({ errorMessage: exception.toString(), stack: exception.stack });
     } else {
-      response
+      return response
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json('INTERNAL SERVER ERROR');
     }
@@ -41,8 +50,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>(); //у контекста мы берем res
     const request = ctx.getRequest<Request>(); //у контекста мы берем req
     const status = exception.getStatus(); //к нам приходит exception error, получаем status
-    console;
-
     ////если в status есть 401
     if (status === HttpStatus.UNAUTHORIZED) {
       const errorsMessages: string[] = [];

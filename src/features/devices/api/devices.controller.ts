@@ -43,6 +43,9 @@ export class DevicesController {
   @Delete('devices/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async terminateSession(@Param('id') id: string, @Req() req: Request) {
+    console.log('controller', req.cookies.refreshToken);
+    if (!req.cookies.refreshToken)
+      throw new UnauthorizedException('Cookie empty');
     return await this.sessionsService.terminateSession(
       id,
       req.cookies.refreshToken,

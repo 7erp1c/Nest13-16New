@@ -30,10 +30,11 @@ import {
 } from '../../../../common/swagger/response.dto';
 import { CodeDto } from '../../../../common/swagger/input.type';
 import { SessionInputModel } from '../../../devices/api/model/input/session.input.models';
+import { SkipThrottle, Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
-//@UseGuards(ThrottlerGuard)
+@UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(
     protected authService: AuthService,
@@ -77,8 +78,26 @@ export class AuthController {
 
     return { accessToken: login.tokenAccess };
   }
+  @SkipThrottle()
   @Post('refresh-token')
-  async for3() {}
+  @HttpCode(HttpStatus.OK)
+  async getNewRefreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    try {
+      const updatePairToken = await this.authService.updatePairToken(
+        req.cookies.refreshToken,
+      );
+      res.cookie('refreshToken', updatePairToken.tokenRefresh, {
+        httpOnly: true,
+        secure: true,
+      });
+      return { accessToken: updatePairToken.tokenAccess };
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+  }
 
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post('registration-confirmation')
@@ -104,18 +123,26 @@ export class AuthController {
     return await this.authService.registrationEmailResending(inputModelDto);
   }
 
+  @SkipThrottle()
   @Post('logout')
-  async for22() {}
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(@Req() req: Request) {
+    try {
+      console.log('controller', req.cookies.refreshToken);
+      await this.authService.logout(req.cookies.refreshToken);
+      return;
+    } catch {
+      throw new UnauthorizedException();
+    }
+  }
 
-  //@SkipThrottle()
+  @SkipThrottle()
   @Get('me')
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   async getMe(@Req() req: Request) {
     try {
-      const userId = req.user.userId;
-      console.log(userId);
-      return this.usersQueryRepository.getUserAuthMe(userId);
+      return this.usersQueryRepository.getUserAuthMe(req.user.userId);
     } catch {
       throw new UnauthorizedException();
     }

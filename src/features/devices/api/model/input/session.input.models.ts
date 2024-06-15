@@ -11,10 +11,10 @@ export class SessionModel {
 }
 
 export class SessionUpdateModel {
-  lastActiveDate: number;
+  lastActiveDate: string;
   refreshToken: {
-    createdAt: number;
-    expiredAt: number;
+    createdAt: string;
+    expiredAt: string;
   };
 }
 

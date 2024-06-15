@@ -44,17 +44,23 @@ import {
 } from './features/devices/domain/device.entity';
 import { DevicesController } from './features/devices/api/devices.controller';
 import cookieParser from 'cookie-parser';
+import { RefreshTokenBlackRepository } from './features/auth/infrastructure/refresh.token.black.repository';
+import {
+  RefreshTokenBlackList,
+  RefreshTokenBlackListSchema,
+} from './features/auth/domain/refresh.token.black.list.entity';
 //const URI = appSettings.api.MONGO_CONNECTION_URI;
 //console.log(URI, 'URI**');
+const throttleModule = ThrottlerModule.forRoot([
+  {
+    ttl: 10000,
+    limit: 5,
+  },
+]);
 @Module({
   // Регистрация модулей
   imports: [
-    ThrottlerModule.forRoot([
-      {
-        ttl: 10000,
-        limit: 2,
-      },
-    ]),
+    throttleModule,
     MongooseModule.forRoot(
       appSettings.env.isTesting()
         ? appSettings.api.MONGO_CONNECTION_URI_FOR_TESTS
@@ -68,6 +74,7 @@ import cookieParser from 'cookie-parser';
       { name: CommentLikes.name, schema: CommentLikesSchema },
       { name: PostsLikes.name, schema: PostsLikesSchema },
       { name: Session.name, schema: DevicesSchema },
+      { name: RefreshTokenBlackList.name, schema: RefreshTokenBlackListSchema },
     ]),
   ],
   // Регистрация провайдеров
@@ -86,6 +93,7 @@ import cookieParser from 'cookie-parser';
     InputUniqDataIsExistConstraint,
     BlogExistsValidator,
     RandomNumberService,
+    RefreshTokenBlackRepository,
   ],
   // Регистрация контроллеров
   controllers: [

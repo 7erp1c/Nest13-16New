@@ -21,6 +21,11 @@ import { DateCreate } from '../../../base/adapters/get-current-date';
 import { Error } from 'mongoose';
 import { SessionInputModel } from '../../devices/api/model/input/session.input.models';
 import { DevicesService } from '../../devices/aplication/devices.service';
+import { RefreshTokenBlackRepository } from '../infrastructure/refresh.token.black.repository';
+import { JwtService } from '@nestjs/jwt';
+import { appSettings } from '../../../settings/app-settings';
+import { jwtConstants } from '../setting/constants';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +36,8 @@ export class AuthService {
     private readonly emailsManager: EmailsManager,
     private readonly dateCreate: DateCreate,
     private readonly devicesService: DevicesService,
+    private readonly tokenBlack: RefreshTokenBlackRepository,
+    private readonly jwtService: JwtService,
   ) {}
 
   async newPassword(inputModelDto: NewPasswordInputModel) {
@@ -180,22 +187,47 @@ export class AuthService {
       userId,
       userName,
     );
-    //создаём token:
-    //   const tokenAccess = await this.tokenService.createJWT(
-    //     findUser._id.toString(),
-    //     findUser.login,
-    //   );
-    //   const tokenRefresh = await this.tokenService.createJWTRefresh(
-    //     findUser._id.toString(),
-    //     findUser.login,
-    //   );
-    //   if (!tokenAccess || !tokenRefresh)
-    //     throw new UnauthorizedException('Token not created');
-    //   //возвращаем two token:
-    //   return {
-    //     tokenAccess,
-    //     tokenRefresh,
-    //   };
-    // }
+  }
+
+  async updatePairToken(oldRefreshToken: string) {
+    //ищем в блэклисте
+    const isInBlackList =
+      await this.tokenBlack.findInBlackList(oldRefreshToken);
+    //протухани и достаём payload
+    const payload = await this.jwtService.verifyAsync(oldRefreshToken, {
+      secret: jwtConstants.secret,
+    });
+    if (!payload || isInBlackList) throw new UnauthorizedException();
+    await this.tokenBlack.addToBlackList(oldRefreshToken);
+
+    const deviceId = payload.deviceId;
+    const userId = payload.userId;
+    const userName = payload.loginUser;
+
+    return await this.devicesService.updateSession(userId, deviceId, userName);
+  }
+
+  async logout(oldRefreshToken: string) {
+    const payload = await this.jwtService.verifyAsync(oldRefreshToken, {
+      secret: jwtConstants.secret,
+    });
+    console.log('controller', payload);
+    const isInBlackList =
+      await this.tokenBlack.findInBlackList(oldRefreshToken);
+
+    if (!payload || isInBlackList) throw new UnauthorizedException();
+
+    await this.tokenBlack.addToBlackList(oldRefreshToken);
+    await this.devicesService.terminateSessionForLogout(
+      payload.deviceId,
+      payload.userId,
+    );
+  }
+
+  async _extractTokenFromHeader(
+    tokenRefresh: string,
+  ): Promise<string | undefined> {
+    const [type, token] = tokenRefresh.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
   }
 }

@@ -11,15 +11,17 @@ import { TokenService } from '../../../common/service/jwt/token.service';
 import { EmailsManager } from '../../../common/service/email/email-manager';
 import { DateCreate } from '../../../base/adapters/get-current-date';
 import { DevicesService } from '../../devices/aplication/devices.service';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    ThrottlerGuard,
     UsersService,
     UsersRepository,
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: '5m' },
+      signOptions: { expiresIn: '10s' },
     }),
   ],
   providers: [

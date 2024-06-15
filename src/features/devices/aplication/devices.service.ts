@@ -1,6 +1,7 @@
 import {
   SessionInputModel,
   SessionModel,
+  SessionUpdateModel,
 } from '../api/model/input/session.input.models';
 import { TokenService } from '../../../common/service/jwt/token.service';
 import {
@@ -12,6 +13,7 @@ import { RandomNumberService } from '../../../common/service/random/randomNumber
 import { DeviceRepository } from '../infrastructure/device.repository';
 import { v4 as uuidv4 } from 'uuid';
 import { JwtService } from '@nestjs/jwt';
+import { jwtConstants } from '../../auth/setting/constants';
 @Injectable()
 export class DevicesService {
   constructor(
@@ -26,12 +28,11 @@ export class DevicesService {
     userName: string,
   ) {
     const deviceId = await this.randomNumberService.generateRandomUUID();
-    console.log('deviceId', deviceId);
-    console.log('deviceId: ', deviceId);
     const tokenAccess = await this.tokenService.createJWT(userId, userName);
     const tokenRefresh = await this.tokenService.createJWTRefresh(
       userId,
       userName,
+      deviceId,
     );
     if (!tokenAccess || !tokenRefresh)
       throw new UnauthorizedException('Token not created');
@@ -56,11 +57,26 @@ export class DevicesService {
   }
 
   async terminateSession(deviceId: string, refreshTokenValue: string) {
-    const payload = this.jwtService.decode(refreshTokenValue);
-
+    const payload = await this.jwtService.verifyAsync(refreshTokenValue, {
+      secret: jwtConstants.secret,
+    });
     if (!payload) throw new UnauthorizedException('Payload empty');
+    console.log('deviceId', payload.deviceId, 'userId: ', payload.userId);
 
     const currentUserId = payload.userId;
+    console.log('currentUserId', currentUserId);
+    const sessionUserId =
+      await this.deviceRepository.getSessionByDeviceId(deviceId);
+    console.log('sessionUserId: ', sessionUserId);
+
+    if (!sessionUserId) throw new UnauthorizedException('Session not found');
+    if (currentUserId !== sessionUserId)
+      throw new ForbiddenException('The session does not belong to the user');
+
+    return await this.deviceRepository.deleteSessionById(deviceId);
+  }
+
+  async terminateSessionForLogout(deviceId: string, currentUserId: string) {
     const sessionUserId =
       await this.deviceRepository.getSessionByDeviceId(deviceId);
 
@@ -85,5 +101,29 @@ export class DevicesService {
       currentSessionDeviceId,
     );
     return;
+  }
+
+  async updateSession(userId: string, deviceId: string, userName: string) {
+    const tokenAccess = await this.tokenService.createJWT(userId, userName);
+    const tokenRefresh = await this.tokenService.createJWTRefresh(
+      userId,
+      userName,
+      deviceId,
+    );
+    const tokenData = await this.tokenService.decodeRefreshToken(tokenRefresh);
+    if (!tokenData) throw new UnauthorizedException('Token not decoded');
+    const sessionUpdateModel: SessionUpdateModel = {
+      lastActiveDate: tokenData.iat,
+      refreshToken: {
+        createdAt: tokenData.iat,
+        expiredAt: tokenData.exp,
+      },
+    };
+
+    await this.deviceRepository.updateExistSession(
+      deviceId,
+      sessionUpdateModel,
+    );
+    return { tokenAccess, tokenRefresh };
   }
 }

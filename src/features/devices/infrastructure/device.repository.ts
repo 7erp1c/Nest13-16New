@@ -1,13 +1,38 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { SessionModel } from '../api/model/input/session.input.models';
+import {
+  SessionModel,
+  SessionUpdateModel,
+} from '../api/model/input/session.input.models';
 import { Session, SessionDocument } from '../domain/device.entity';
 import { Model } from 'mongoose';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 @Injectable()
 export class DeviceRepository {
   constructor(
     @InjectModel(Session.name) protected sessionsModel: Model<Session>,
   ) {}
+
+  async updateExistSession(deviceId: string, updateModel: SessionUpdateModel) {
+    try {
+      const session = await this.sessionsModel
+        .findOne({
+          deviceId: deviceId,
+        })
+        .exec();
+      if (!session) throw new UnauthorizedException('Session not found');
+      session.lastActiveDate = updateModel.lastActiveDate;
+      session.refreshToken.expiredAt = updateModel.refreshToken.expiredAt;
+      session.refreshToken.createdAt = updateModel.refreshToken.createdAt;
+      await session.save();
+    } catch {
+      throw new Error();
+    }
+  }
+
   async createNewSession(sessionModel: SessionModel) {
     try {
       const session: SessionDocument =
@@ -44,7 +69,7 @@ export class DeviceRepository {
     try {
       const session = await this.sessionsModel
         .findOne({ deviceId: deviceId })
-        .exec();
+        .lean();
       if (!session) throw new NotFoundException('Session not found');
       return session.userId;
     } catch {

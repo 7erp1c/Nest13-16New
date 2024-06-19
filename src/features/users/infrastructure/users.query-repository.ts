@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { User, UserDocument } from '../domain/user.entity';
+import { User } from '../domain/user.entity';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -9,8 +9,8 @@ import {
 import { UserType } from '../api/models/output/output';
 import { WithId } from 'mongodb';
 import { UserOutputModelMapper } from '../api/models/output/user.output.model';
-import { getAuthTypeEndpointMe } from '../../auth/api/model/output/output';
-import { getAuthUsersView } from '../../auth/api/model/output/auth.output.model';
+import { getAuthTypeEndpointMe } from '../../security/auth/api/model/output/output';
+
 export const SORT = {
   asc: 1,
   desc: -1,

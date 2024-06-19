@@ -8,8 +8,8 @@ import {
 } from 'class-validator';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Blog } from '../../../../features/blogs/domain/blogs.entity';
 import { ObjectId } from 'mongodb';
+import { Blog } from '../../../../features/blogs/blogs/domain/blogs.entity';
 
 function isValidObjectId(id: string): boolean {
   return ObjectId.isValid(id) && new ObjectId(id).toString() === id;

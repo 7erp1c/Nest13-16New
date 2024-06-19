@@ -10,8 +10,8 @@ import { Error, Model } from 'mongoose';
 import { User, UserDocument } from '../domain/user.entity';
 import { CreateUserDto, UserOutputDto } from '../api/models/output/output';
 import { ObjectId } from 'mongodb';
-import { LoginOrEmailInputModel } from '../../auth/api/model/input/loginOrEmailInputModel';
 import { appSettings } from '../../../settings/app-settings';
+import { LoginOrEmailInputModel } from '../../security/auth/api/model/input/loginOrEmailInputModel';
 
 @Injectable()
 export class UsersRepository {

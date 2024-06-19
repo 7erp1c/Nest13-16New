@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { LoginOrEmailInputModel } from '../../features/auth/api/model/input/loginOrEmailInputModel';
 import { IsOptional, IsString } from 'class-validator';
 
 export class CodeDto {

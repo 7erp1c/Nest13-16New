@@ -7,20 +7,19 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Post,
   Query,
-  Req,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import { UsersQueryRepository } from '../infrastructure/users.query-repository';
-import { UsersService } from '../application/users.service';
 import { UserOutputDto } from './models/output/output';
 import { UserCreateInputModel } from './models/input/create.user.input.model';
 import { createQuery } from '../../../base/adapters/query/create.query';
 import { QueryUsersRequestType } from './models/input/input';
 import { AdminAuthGuard } from '../../../common/guards/auth.admin.guard';
+import { CreateUserUseCaseCommand } from '../aplicaion.use.case/create.user.use.case';
+import { DeleteUserUseCaseCommand } from '../aplicaion.use.case/delete.user.use.case';
+import { CommandBus } from '@nestjs/cqrs';
 
 // Tag для swagger
 
@@ -30,8 +29,8 @@ import { AdminAuthGuard } from '../../../common/guards/auth.admin.guard';
 //@UseGuards(AuthGuard)
 export class UsersController {
   constructor(
-    protected usersService: UsersService,
     protected usersQueryRepository: UsersQueryRepository,
+    private commandBus: CommandBus,
   ) {}
   @Get()
   @UseGuards(AdminAuthGuard)
@@ -47,14 +46,16 @@ export class UsersController {
   async createUser(
     @Body() createModel: UserCreateInputModel,
   ): Promise<UserOutputDto> {
-    return await this.usersService.createUser(createModel);
+    return await this.commandBus.execute(
+      new CreateUserUseCaseCommand(createModel),
+    );
   }
 
   @Delete(':id')
   @UseGuards(AdminAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') id: string) {
-    await this.usersService.deleteUser(id);
+    await this.commandBus.execute(new DeleteUserUseCaseCommand(id));
   }
 
   @Get()

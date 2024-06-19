@@ -4,8 +4,8 @@ import { RefreshTokenPayloadType } from './type/jwt.type';
 import { appSettings } from '../../../settings/app-settings';
 import { ObjectId } from 'mongodb';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from '../../../features/auth/setting/constants';
 import moment from 'moment';
+import { jwtConstants } from '../../../features/security/auth/setting/constants';
 @Injectable()
 export class TokenService {
   constructor(private jwtService: JwtService) {}
